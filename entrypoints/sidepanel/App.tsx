@@ -548,7 +548,7 @@ function App() {
       {view === 'settings' && (
         <section className="view-content">
           <div className="settings-card">
-            <p className="eyebrow">VERSION 0.2</p>
+            <p className="eyebrow">LOCAL-FIRST</p>
             <h2>Local-first learning workspace</h2>
             <p>笔记只保存在本机浏览器中，不上传学习内容，也不连接 AI 服务。</p>
           </div>
