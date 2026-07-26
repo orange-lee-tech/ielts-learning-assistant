@@ -38,6 +38,36 @@ const ERROR_OPTIONS = [
 
 const TAG_OPTIONS = ['Listening', 'Reading', 'Writing', 'Speaking'];
 
+const formatTextExport = (notes: SavedNote[]) => {
+  const lines = [
+    'IELTS Learning Assistant - Notes Export',
+    `Exported at: ${new Date().toLocaleString('zh-CN')}`,
+    `Total notes: ${notes.length}`,
+    '',
+  ];
+
+  notes.forEach((item, index) => {
+    lines.push(
+      '='.repeat(64),
+      `Note ${index + 1}`,
+      `Created: ${new Date(item.createdAt).toLocaleString('zh-CN')}`,
+      `Tags: ${item.tags.join(', ') || '-'}`,
+      `Error reasons: ${item.errorReasons.join(', ') || '-'}`,
+      `Page: ${item.pageTitle || '-'}`,
+      `URL: ${item.pageUrl || '-'}`,
+      '',
+      'Selected sentence:',
+      item.selectedText || '-',
+      '',
+      'Note:',
+      item.note || '-',
+      '',
+    );
+  });
+
+  return lines.join('\r\n');
+};
+
 function App() {
   const [view, setView] = useState<PanelView>('capture');
   const [page, setPage] = useState<PageContext>({
@@ -50,6 +80,7 @@ function App() {
   const [tags, setTags] = useState<string[]>(['Listening']);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [status, setStatus] = useState('');
+  const [exportStatus, setExportStatus] = useState('');
 
   const loadSavedNotes = useCallback(async () => {
     const result = await browser.storage.local.get('ieltsNotes');
@@ -170,6 +201,28 @@ function App() {
     setNote('');
     setErrorReasons([]);
     setStatus('已保存到本机学习库。');
+  };
+
+  const exportNotesAsText = () => {
+    if (savedNotes.length === 0) {
+      setExportStatus('暂无笔记可导出。');
+      return;
+    }
+
+    const blob = new Blob(['\ufeff', formatTextExport(savedNotes)], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+
+    link.href = url;
+    link.download = `IELTS-Notes-${date}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setExportStatus(`已导出 ${savedNotes.length} 条笔记。`);
   };
 
   return (
@@ -297,7 +350,19 @@ function App() {
               <p className="eyebrow">LOCAL LIBRARY</p>
               <h2>{savedNotes.length} saved notes</h2>
             </div>
+            <button
+              className="secondary-button"
+              onClick={exportNotesAsText}
+              disabled={savedNotes.length === 0}
+            >
+              导出 TXT
+            </button>
           </div>
+          {exportStatus && (
+            <p className="export-status" aria-live="polite">
+              {exportStatus}
+            </p>
+          )}
 
           {savedNotes.length === 0 ? (
             <div className="empty-state">
@@ -341,6 +406,7 @@ function App() {
               <li>捕获网页选中文本</li>
               <li>记录笔记、错因和技能标签</li>
               <li>在本机学习库中复盘</li>
+              <li>把全部笔记导出为本地 TXT 文件</li>
             </ul>
           </div>
         </section>

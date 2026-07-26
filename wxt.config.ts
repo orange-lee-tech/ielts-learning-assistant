@@ -2,8 +2,9 @@ import { defineConfig } from 'wxt';
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
+  targetBrowsers: ['chrome', 'edge', 'firefox'],
 
-  manifest: {
+  manifest: ({ browser }) => ({
     name: 'IELTS Learning Assistant',
     description:
       'Capture selected IELTS text, record notes, and review learning points in a browser side panel.',
@@ -23,5 +24,18 @@ export default defineConfig({
         48: 'icon/48.png',
       },
     },
-  },
+    ...(browser === 'firefox'
+      ? {
+          browser_specific_settings: {
+            gecko: {
+              id: 'ielts-learning-assistant@orange-lee-tech',
+              strict_min_version: '140.0',
+              data_collection_permissions: {
+                required: ['none'] as const,
+              },
+            },
+          },
+        }
+      : {}),
+  }),
 });

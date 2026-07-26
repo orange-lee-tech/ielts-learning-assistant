@@ -1,0 +1,47 @@
+name: Build browser extension
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Chrome, Edge and Firefox packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile and build all browsers
+        run: npm run build:all
+
+      - name: Create shareable ZIP packages
+        run: npm run zip:all
+
+      - name: Upload browser packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ielts-learning-assistant-0.1.0
+          path: |
+            .output/ielts-learning-assistant-0.1.0-chrome.zip
+            .output/ielts-learning-assistant-0.1.0-edge.zip
+            .output/ielts-learning-assistant-0.1.0-firefox.zip
+            .output/ielts-learning-assistant-0.1.0-sources.zip
+          if-no-files-found: error
+          retention-days: 30
